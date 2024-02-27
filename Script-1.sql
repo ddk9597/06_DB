@@ -555,18 +555,486 @@ ORDER BY DEPT_CODE ; -- ASC는 기본값. 생략 가능함
 
 -- EMPLOYEE 테이블에서 급여가 300만 이상, 600만 이하인 사원의
 -- 사번, 이름, 급여를 이름 내림차순 조회
-
 SELECT EMP_ID, EMP_NAME, SALARY 
 FROM EMPLOYEE
 WHERE SALARY BETWEEN 3000000 AND 6000000
 ORDER BY 2 DESC ; -- 정렬순서로 기준을 잡는 것은 바람직하지 않음
 
+
 /* ORDER BY 절에 수식 넣기 */
 -- EMPLOYEE 테이블에서 이름, 연봉을 연봉 내림차순으로 조회
-
 SELECT EMP_NAME, SALARY*12 연봉
 FROM EMPLOYEE
 ORDER BY SALARY*12 DESC ; -- 대부분 SELECT 절에 작성된 컬럼 그대로 따라 적음
+
+/* ORDER BY 절에 별칭 적용하기 */
+--> SELECT절 해석 이후 ORDER BY절 해석되기 때문에
+--> SELECT절에서 사용된 별칭을 ORDER BY절에서 사용할 수 있음
+-- ++ 앞에서 해석되면 뒤에서 사용 가능함
+
+-- EMPLOYEE 테이블에서 이름, 연봉을 연봉 내림차순으로 조회
+SELECT EMP_NAME 이름, SALARY*12 연봉
+FROM EMPLOYEE
+ORDER BY 연봉 DESC ; -- 대부분 SELECT 절에 작성된 컬럼 그대로 따라 적음
+
+/* WHERE절 별칭 사용 불가 확인*/
+
+SELECT EMP_NAME, DEPT_CODE 부서코드
+FROM EMPLOYEE
+WHERE 부서코드 = 'D6' ;
+ --> ORA-00904: "부서코드": 부적합한 식별자
+ -->"부서코드" 컬럼이 존재하지 않음
+ --> 발생 이유 : 해석 순서가 FROM, WHERE, SELECT순으로 해석되기에
+ -- 					WHERE 해석 시에는 SELECT의 내용 컴파일러(?)가 아직 모름
+
+/* NULLS FIRST/LAST 옵션 적용하기 */
+-- 모든 사원의 이름, 전화번호 조회
+-- 오름차순 + NULLS FIRST(NULL인 경우 제일 위에)
+SELECT EMP_NAME , PHONE 
+FROM EMPLOYEE
+ORDER BY PHONE NULLS FIRST ;
+
+-- 오름차순 + NULLS LAST(NULL인 경우 제일 아래)
+SELECT EMP_NAME , PHONE 
+FROM EMPLOYEE
+ORDER BY PHONE /*NULLS LAST*/ ; -- NULLS LAST는 DEFAULT 값. 생략 가능
+
+-- 내림차순 + NULLS FIRST(NULL인 경우 제일 위에)
+SELECT EMP_NAME , PHONE 
+FROM EMPLOYEE
+ORDER BY PHONE DESC NULLS FIRST ;
+--> 정렬기준 -> NULL 위치 순서대로 해석
+
+/************** 정렬 중첩 ***************/
+-- 먼저 작성된 정렬 기준을 깨지 않고 
+-- 다음 작성된 정렬 기준을 적용.
+
+-- EMPLOYEE 테이블에서
+-- 이름, 부서코드, 급여를
+-- 부서코드 오름차순, 급여 내림차순으로 조회
+
+SELECT EMP_NAME, DEPT_CODE, SALARY
+FROM EMPLOYEE
+ORDER BY DEPT_CODE, SALARY DESC ;
+
+-- EMPLOYEE 테이블에서 이름, 부서코드, 직급 코드를 
+-- 부서코드 오름차순, 직급코드 내림차순, 이름 오름차순으로 정렬 조회
+
+SELECT EMP_NAME 이름, DEPT_CODE 부서코드, JOB_CODE 직급코드 
+FROM EMPLOYEE
+ORDER BY 부서코드 , 직급코드 DESC, 이름 ; 
+
+
+
+-- 함수 : 컬럼값 | 지정된값을 읽어 연산한 결과를 반환하는 것
+
+-- 단일행 함수 : N개의 행의 컬럼 값을 전달하여 N개의 결과가 반환
+
+-- 그룹 함수  : N개의 행의 컬럼 값을 전달하여 1개의 결과가 반환
+--			  (그룹의 수가 늘어나면 그룹의 수 만큼 결과를 반환)
+
+-- 함수는 SELECT절, WHERE절, ORDER BY절
+--      GROUP BY절, HAVING절에서 사용 가능
+
+
+
+/********************* 단일행 함수 *********************/
+
+
+-- < 문자열 관련 함수 >
+
+-- Length(문자열|컬럼명): 문자열의 길이 반환
+SELECT 'HELLO WORLD', LENGTH('HELLO WORLD') FROM DUAL;
+
+-- EMPLOYEE 테이블에서 사원명, 이메일, 이메일 길이 조회
+-- 단, 이메일 길이가 12 이하인 행만 이메일 길이 오름차순 조회
+
+SELECT EMP_NAME, EMAIL, LENGTH(EMAIL) "이메일 길이"
+FROM EMPLOYEE 
+WHERE LENGTH(EMAIL) <= 12
+ORDER BY "이메일 길이";
+
+----------------------------------------------
+
+-- INSTR(문자열 | 컬럼명, '찾을 문자열' [, 찾을 시작 위치 [, 순번]]) 
+-- 찾을 시작 위치부터 지정된 순번째 찾은 문자열의 시작 위치를 반환
+
+-- 문자열에서 맨 앞에있는 'B'의 위치를 조회
+SELECT 'AABAACAABBAA', INSTR('AABAACAABBAA', 'B') 
+FROM DUAL; -- 3. (INDEX로 나오는것 아님! 몇 번째에 위치해 있는지)
+
+-- 문자열에서 5번부터 검색 시작해서 처음 찾은 'B'의 위치 조회
+SELECT 'AABAACAABBAA', INSTR('AABAACAABBAA', 'B', 5) 
+FROM DUAL; 
+
+-- 문자열에서 5번부터 검색 시작해서 두번째로 찾은 'B'의 위치 조회
+SELECT 'AABAACAABBAA', INSTR('AABAACAABBAA', 'B', 5, 2) 
+FROM DUAL; 
+
+----------------------------------------------
+
+-- SBSTR(문자열 | 컬럼명, 시작위치 [,길이])
+
+-- 문자열을 시작 위치부터 지정된 길이 만큼 잘라내서 반환
+-- 길이 미작성 시 시작 위치 부터 끝까지 잘라내서 반환
+
+-- 시작위치, 잘라낼 길이 지정
+SELECT SUBSTR('ABCDEFG', 2, 3) 
+FROM DUAL; --2번부터 시작해서, 3칸을 잘라 골라내겠다.
+
+-- 시작위치 지정, 잘라낼 길이 미지정 --> 시작위치부터 끝까지 SELECT 됨
+SELECT SUBSTR('ABCDEFG', 4) FROM DUAL; 
+
+--[INSTR || SUBSTR]
+
+-- EMPLOYEE 테이블에서
+-- 사원명, 이메일 아이디(@ 앞에까지 문자열)을
+-- 이메일 아이디 오름차순으로 조회
+
+SELECT EMP_NAME, SUBSTR(EMAIL, 1, INSTR(EMAIL, '@')-1) "이메일 아이디"
+FROM EMPLOYEE
+ORDER BY "이메일 아이디" ;
+
+-------------------------------------------------------------
+
+-- TRIM([ [옵션] 문자열 | 컬럼명 FROM ] 문자열 | 컬럼명)
+-- 주어진 문자열의 앞쪽|뒤쪽|양쪽에 존재하는 지정된 문자열을 제거
+
+-- 옵션 : LEADING(앞쪽), TRAILING(뒤쪽), BOTH(양쪽, 기본값)
+
+-- 문자열 공백 제거
+
+SELECT '   기  준   ', 
+	TRIM(LEADING  ' ' FROM '   기  준   '), -- 앞쪽 공백 제거
+	TRIM(TRAILING ' ' FROM '   기  준   '), -- 뒷쪽 공백 제거
+	TRIM(BOTH     ' ' FROM '   기  준   ')  -- 양쪽 공백 제거
+FROM DUAL;
+
+-- 특정 문자열 제거하기
+SELECT '###기  준###', 
+	TRIM(LEADING  '#' FROM '###기  준###'), -- 앞쪽 공백 제거
+	TRIM(TRAILING '#' FROM '###기  준###'), -- 뒷쪽 공백 제거
+	TRIM(BOTH     '#' FROM '###기  준###')  -- 양쪽 공백 제거
+FROM DUAL;
+
+
+-------------------------------------------------------
+
+-- REPLACE(문자열 | 컬럼명, 찾을 문자열, 바꿀 문자열)
+
+SELECT * FROM NATIONAL;
+
+SELECT NATIONAL_CODE, REPLACE(NATIONAL_NAME,'한국', '대한민국')
+FROM "NATIONAL" ;
+
+-------------------------------------------------------
+-------------------------------------------------------
+-------------------------------------------------------
+
+-- <숫자 관련 함수> --
+
+-- [나머지]
+-- MOD(숫자 | 컬럼명, 나눌 값) : 나머지
+SELECT MOD(105, 100) FROM DUAL;
+
+--[절대값]
+-- ABS(숫자 | 컬럼명) : 절대값
+SELECT ABS(10), ABS(-10) FROM DUAL;
+
+-- [올림 CEIL, 내림FLOOR] 
+-- CEIL | FLOOR (숫자 \ 컬럼명) : 정수 단위로 올림, 내림
+SELECT CEIL(1.1), FLOOR(1.3) FROM DUAL;
+
+-- [반올림]
+-- ROUND(숫자 | 컬럼명 [, 소수점 위치]) : 반올림
+-- 소수점 위치 지정 x : 소수점 첫째 자리에서 반올림 -> 정수 표현
+-- 소수점 위치 지정 O
+ -- 1) 양수 : 지정된 위치의 소수점 자리까지 표현
+ -- 2) 음수 : 지정된 위치의 정수 자리까지 표현
+
+SELECT 123.456,
+	ROUND (123.456),	    -- 123	
+	ROUND	(123.456, 1),   -- 123.5
+	ROUND	(123.456, 2),   -- 123.46
+	ROUND (123.456, -1),  -- 120
+	ROUND (123.456, -2)   -- 100
+FROM DUAL;
+
+-- [버림(잘라내기)]
+-- TRUNC(숫자 | 컬럼명[,소수점 위치]) : 버림(잘라내기)
+SELECT -123.5,
+	TRUNC(-123.5),	 -- -123(소수점 .5 버림)
+	FLOOR(-123.5)		 -- -124(내림!)
+FROM DUAL;
+
+-----------------------------------------------------------------------------
+-------------------------<날짜 관련 함수>----------------------------------------
+-----------------------------------------------------------------------------
+
+-- SYSDATE : 현재시간
+-- SYSTIMESTAMP : 현재시간(밀리초, 표준시간 포함)
+SELECT SYSDATE, SYSTIMESTAMP FROM DUAL;
+
+
+-- MONTH_BETWEEN(날짜, 날자) : 두 날짜 사이의 개월 수를 반환
+--> 반환 값 중 정수 부분은 차이 나는 개월 수
+SELECT MONTHS_BETWEEN('2024-03-28', SYSDATE) 
+FROM DUAL;
+--> ORACLE은 자료형이 맞지 않은 상황이라도 
+--  작성된 값의 형태가 요구하는 자료형의 형태를 띄고 있으면
+--  자동으로 형변환(PARSING)을 진행한다!!!
+
+-- EX) '2024-03-27' -> TO_DATE('2024-03-27', 'YYYY-MM-DD') 자동으로 실행됨!!!
+
+-- EMPLOYEE 테이블에서
+-- 모든 사원의 사번, 이름, 입사일, N년차 조회
+SELECT EMP_ID, EMP_NAME, HIRE_DATE,
+CEIL( MONTHS_BETWEEN(SYSDATE, HIRE_DATE)/12 ) ||'년차' 연차
+FROM EMPLOYEE ;
+
+-- MONTHS_BETWEEN()은 윤년(2월 29일이 포함된 해) 계산이 자동으로 수행
+--> YEAR, MONTH 단위 계산 시 더 정확한 값을 얻어낼 수 있다!!!
+
+-- ADD_MONTH(날짜, 숫자) : 날짜를 숫자만큼의 개월 수를 더하여 반환
+--> 달마다 다른 일수를 알아서 계산함
+
+SELECT SYSDATE,	 		 			-- 2월 27일
+	SYSDATE + 29,			 			-- 3월 27일
+	SYSDATE + 29 + 31, 			-- 4월 27일
+	ADD_MONTHS(SYSDATE, 1), -- 3월 27일
+	ADD_MONTHS(SYSDATE, 2)	-- 4월 27일
+FROM DUAL;
+
+-- LAST_DAY(날짜) : 해당 월의 마지막 날짜를 반환
+SELECT LAST_DAY(SYSDATE) FROM DUAL; 
+
+-- 다음 달 마지막 날짜
+SELECT LAST_DAY(ADD_MONTHS(SYSDATE, 1)) FROM DUAL; 
+
+-- 다음 달의 첫째 날짜와 마지막 날짜 구하기
+SELECT LAST_DAY(SYSDATE) + 1 "다음달 첫 날"	,
+		   LAST_DAY(ADD_MONTHS(SYSDATE, 1)) "다음달 마지막 날"
+FROM DUAL;
+
+
+-- EXTRACT(YEAR | MONTH | DAY FROM 날짜)
+-- EXTRACT : 뽑아내다, 추출하다
+-- 지정된 날짜의 년 | 월 | 일을 추출하여 정수로 반환
+SELECT EXTRACT(YEAR FROM SYSDATE) 년,
+			 EXTRACT(MONTH FROM SYSDATE) 월,
+			 EXTRACT(DAY FROM SYSDATE) 일
+FROM DUAL;
+
+-- EMPLOYEE 테이블에서 2000년대에 입사한 사원의
+-- 사번, 이름, 입사일을 이름 오름차순으로 조회
+
+SELECT EMP_ID , EMP_NAME , HIRE_DATE 
+FROM EMPLOYEE
+WHERE EXTRACT(YEAR FROM HIRE_DATE) >= 2000
+ORDER BY EMP_NAME ;
+
+-----------------------------------------------------------
+-----------------------------------------------------------
+-----------------------------------------------------------
+
+-- <형변환(Parsing) 함수>
+
+-- 문자열(CHAR, VARCHAR2) <-> 숫자(NUMBER)
+-- 문자열(CHAR, VARCHAR2) <-> 날짜(DATE)
+-- 숫자(NUMBER) --> 날짜(DATE)
+-- 날짜는 숫자가 될 수 없다!!
+
+/* TO_CHAR(날짜 | 숫자 [, 포맷]) : 문자열로 변환 // 문자(글자 하나)가 아님
+ * 
+ * 숫자 -> 문자열
+ * 포맷 
+ * 1) 9 : 숫자 한 칸을 의미, 오른쪽 정렬
+ * 2) 0 : 숫자 한 칸을 의미, 오른쪽 정렬, 빈 칸에 0을 추가
+ * 3) L : 현재 시스템이나 DB에 설정된 나라의 화폐 기호
+ * 4) , : 숫자의 자릿수 구분
+ * */
+
+SELECT 1234, TO_CHAR(1234) FROM DUAL; 
+
+--[9 사용 자리 표현]
+SELECT 1234, TO_CHAR(1234, '99999999') FROM DUAL;
+--> 9를 8개 써서 8자리로 표현, 앞4자리는 공백
+
+--[0 사용 자리 표현 + 0으로 채우기]
+SELECT 1234, TO_CHAR(1234, '00000000') FROM DUAL;
+--> 0을 8개 써서 8자리로 표현, 앞4자리는 0으로 채워짐
+
+--[문제상황]
+/* 숫자 -> 문자열 변환시 문제상황 */
+SELECT 1234, TO_CHAR(1234, '000') FROM DUAL;
+--> 포맷에 지정된 칸 수가 숫자의 전체 길이보다 적으면 #으로 변환되어 출력
+
+-- 화폐기호 + 자릿수 구분
+SELECT TO_CHAR(123456789, 'L999999999'),
+			 TO_CHAR(123456789, '$999999999'), 
+			 TO_CHAR(123456789, '$999,999,999') 
+FROM DUAL;
+
+
+-- 모든 사원의 연봉 조회
+SELECT EMP_NAME,
+TO_CHAR(SALARY*12,'L999,999,999') 연봉
+FROM EMPLOYEE;
+
+
+------------------------------------------------
+
+/* 날짜 -> 문자열
+ * 
+ * YY    : 년도(짧게) EX) 23
+ * YYYY  : 년도(길게) EX) 2023
+ * 
+ * RR    : 년도(짧게) EX) 23
+ * RRRR  : 년도(길게) EX) 2023
+ * 
+ * MM : 월
+ * DD : 일
+ * 
+ * AM/PM : 오전/오후 --> 입력한 시간에 따라서 알아서 정해짐
+ * 
+ * HH   : 시간 (12시간)
+ * HH24 : 시간 (24시간)
+ * MI   : 분
+ * SS   : 초
+ * 
+ * DAY : 요일(전체) EX) 월요일, MONDAY
+ * DY  : 요일(짧게) EX) 월, MON
+ * */
+
+-- 현재 날짜 ->'2024-02-27'
+SELECT SYSDATE, TO_CHAR(SYSDATE, 'YYYY-MM-DD') FROM DUAL;
+
+-- 현재 날짜 -> '2024-02-07 화요일'
+SELECT SYSDATE, TO_CHAR(SYSDATE, 'YYYY-MM-DD DAY') FROM DUAL; 
+
+-- 현재 날짜 -> '24.02.27.(화)12:11:20'
+SELECT SYSDATE, TO_CHAR(SYSDATE, 'YY.MM.DD(DY)AM HH:MI:SS') FROM DUAL;
+
+-- /, (), :, . -> 일반적으로 날짜 표기 시 사용하는 기호로.
+-- 패턴으로 인식되어 오류가 발생하지 않음!!
+
+-- 현재 날짜  -> 2024년 02월 27일 오후 12시 15분 30초
+
+SELECT TO_CHAR(SYSDATE, 'YYYY년 MM월 DD일 PM HH시 MI분 SS초')
+FROM DUAL;
+--> 년,월,일 같은 한글 또는 날짜와 관련 없는 문자는 패턴이 아니므로 오류 발생
+--> 원하는 패턴의 구성 문자를 ""로 감싸면 사용 가능
+---> "" : ""내부의 글자 있는 그대로 인식함
+
+SELECT TO_CHAR(SYSDATE, 'YYYY"년" MM"월" DD"일" PM HH"시" MI"분" SS"초"')
+FROM DUAL;
+
+-------------------------------------------------------------------------
+
+-- TO_DATE(문자열 | TNTWK[, 포맷])
+-- 문자열 또는 숫자를 날짜 형식으로 변환
+
+SELECT TO_DATE('2024-03-04') 
+FROM DUAL;
+-- ''안의 문자열이 날짜를 표현하는 형식이면 포맷 지정 없이 바로 변경 가능.
+
+SELECT TO_DATE('04-03-2024','DD-MM-YYYY')
+FROM DUAL;
+--> ''안의 문자열을 임의로 지정한 상태라면 추가적으로 인식시킬 필요 있음.
+
+SELECT TO_DATE('02월 27일 화요일 12시 24분', 'MM"월" DD"일" DAY HH"시" MI"분"')
+FROM DUAL;
+
+-- 숫자 -> 날짜
+SELECT TO_DATE(20240227,'YYYYMMDD') FROM DUAL;
+
+
+/*** 연도 패턴  Y, R 차이점 ***/
+
+-- 연도가 두자리만 작성되어있는 경우
+-- 50 미만 : Y,R 둘 다 누락된 연도 앞부분에 현재 세기(21C == 2000년대) 추가
+-- 50 이상 : Y : 현재 세기(2000년대) 추가
+--		    R : 이전 세기(1900년대) 추가
+
+-- 50 미만 확인
+SELECT
+	TO_DATE('49-11-25', 'YY-MM-DD') "YY", -- 2049
+	TO_DATE('49-11-25', 'RR-MM-DD') "RR"  -- 2049
+FROM DUAL;
+
+-- 50 이상
+SELECT
+	TO_DATE('59-11-25', 'YY-MM-DD') "YY", -- 2059
+	TO_DATE('59-11-25', 'RR-MM-DD') "RR"  -- 1959 
+FROM DUAL;
+
+-- 연도는 4자리 꽉꽉 쓰는게 좋다..
+
+-----------------------------------------------------------
+
+-- TO_NUMBER(문자열 [,패턴) : 문자열 -> 숫자 변환
+SELECT TO_NUMBER('$1,500', '$9,999')
+FROM DUAL;
+
+-----------------------------------------------------------
+
+-- <NULL 처리 연산> : IS NULL, IS NOT NULL
+
+-- <NULL 처리 함수 NVL((NULLVALUE)>
+-- NVL(컬럼명, 컬럼 값이 NULL일 경우 변경할 값)
+-- 지정된 컬럼 값이 NULL일 경우 변경
+
+-- EMPLOYEE 테이블에서
+-- 사번, 이름, 전화번호 조회
+-- 전화번호가 없으면(NULL)'없음'으로 조회
+
+SELECT EMP_ID, EMP_NAME, 
+			 NVL(PHONE, '없음') "전화번호" 
+FROM EMPLOYEE;
+
+-- EMPLOYEE 테이블에서
+-- 사번, 이름, 보너스 조회
+-- 보너스가 없으면(NULL)'없음'으로 조회
+
+SELECT EMP_ID , EMP_NAME , 
+			 NVL(BONUS, 0) 
+FROM EMPLOYEE;
+
+-- EMPLOYEE 테이블에서 이름, 급여, 성과급(급여*보너스)
+-- 성과급이 없으면 0으로 표시
+
+SELECT EMP_NAME , SALARY , 
+			 SALARY * NVL(BONUS, 0 )"성과급"
+
+FROM EMPLOYEE;
+--> NULL과 산술연산하면 값은 무조건 NULL이 나온다
+
+----------------------------------------------
+
+-- NVL2(컬럼명, NULL이 아닌 경우 변경할 값, NULL인 경우 변경할 값)
+
+-- EMPLOYEE 테이블에서
+-- 사번, 이름, 전화번호 조회
+-- 전화번호 없으면 '없음'
+-- 전화번호 있으면 '010********' 형식으로 변경해서 조회
+
+SELECT EMP_ID, EMP_NAME , 
+				NVL2(PHONE,
+						 RPAD( SUBSTR(PHONE, 1, 3), LENGTH(PHONE), '*' ),
+						 '없음')
+FROM EMPLOYEE 
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
