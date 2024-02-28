@@ -221,7 +221,7 @@ LEFT JOIN DEPARTMENT ON (DEPT_CODE = DEPT_ID);
 SELECT EMP_NAME, DEPT_TITLE
 FROM EMPLOYEE, DEPARTMENT
 WHERE DEPT_CODE = DEPT_ID(+) ;
---> 왼쪽 DEPT_CODE 값이 왼쪽의 DEPT_ID와 일치하지 않아도
+--> 왼쪽 DEPT_CODE 값이 오른쪽의 DEPT_ID와 일치하지 않아도
 --  결과에 포함시켜라
 
 
@@ -235,9 +235,13 @@ RIGHT JOIN DEPARTMENT ON (DEPT_CODE = DEPT_ID);
 --> JOIN 구문 기준으로 오른쪽에 작성된 모든 행이 
 -- 최종 결과인 RESULT SET에 포함되는 JOIN
 
-
-
 -- 오라클 구문
+SELECT EMP_NAME, DEPT_TITLE
+FROM EMPLOYEE, DEPARTMENT
+WHERE DEPT_CODE(+) = DEPT_ID ;
+--> 오른쪽 DEPT_ID 값이 오른쪽의 DEPT_CODE와 일치하지 않아도
+--  결과에 포함시켜라
+
 
 -- 3) FULL [OUTER] JOIN   : 합치기에 사용한 두 테이블이 가진 모든 행을 결과에 포함
 -- ** 오라클 구문은 FULL OUTER JOIN을 사용 못함
@@ -249,6 +253,12 @@ FULL JOIN DEPARTMENT ON (DEPT_CODE = DEPT_ID);
 --> JOIN 구문 기준으로 양쪽에 작성된 모든 행이 
 -- 최종 결과인 RESULT SET에 포함되는 JOIN
 
+-- 오라클 구문
+SELECT EMP_NAME, DEPT_TITLE
+FROM EMPLOYEE, DEPARTMENT
+WHERE DEPT_CODE(+) = DEPT_ID(+) ;
+--> 오류 발생
+
 
 
 
@@ -257,6 +267,13 @@ FULL JOIN DEPARTMENT ON (DEPT_CODE = DEPT_ID);
 
 -- 3. 교차 조인(CROSS JOIN == CARTESIAN PRODUCT)
 --  조인되는 테이블의 각 행들이 모두 매핑된 데이터가 검색되는 방법(곱집합)
+--> 모든 경우의 수를 보고싶을때 제외하곤 직접 작성하는 경우 거의 없음
+	--> 6.자연조인(NATURAL JOIN)실패 결과로 교차 조인 결과가 출력됨
+	--> 교차 조인 결과가 보이면 자연 조인 잘못 쓴 것이라고 인식해라..
+
+SELECT EMP_NAME , DEPT_CODE, DEPT_TITLE 
+FROM EMPLOYEE e 
+CROSS JOIN DEPARTMENT d ;
 
 
 
@@ -267,6 +284,15 @@ FULL JOIN DEPARTMENT ON (DEPT_CODE = DEPT_ID);
 -- '='(등호)를 사용하지 않는 조인문
 --  지정한 컬럼 값이 일치하는 경우가 아닌, 값의 범위에 포함되는 행들을 연결하는 방식
 
+-- 비등가 조인
+SELECT EMP_NAME , E.SAL_LEVEL , MIN_SAL, SALARY, MAX_SAL
+JOIN SAL_GRADE S ON (SALARY BETWEEN MIN_SAL AND MAX_SAL);
+
+-- 사원의 급여가
+-- SAL_LEVEL에 작성된 최소 ~ 최소 범위에
+-- 급여가 포함될 때만 결고에 넣겠다는 JOIN
+
+
 
 ---------------------------------------------------------------------------------------------------------------
 
@@ -274,13 +300,20 @@ FULL JOIN DEPARTMENT ON (DEPT_CODE = DEPT_ID);
 
 -- 같은 테이블을 조인.
 -- 자기 자신과 조인을 맺음
+--> 똑같은 테이블이 2개 있다고 생각하면 쉽다!!!
+
+-- EMPLOYEE 테이블에서
+-- 각 사원의 이름, 사수 이름을 조회
 
 -- ANSI 표준
-
-
+SELECT EMP.EMP_NAME 사원명 , MGR.EMP_NAME 사수명
+FROM EMPLOYEE EMP 
+LEFT JOIN EMPLOYEE MGR ON (EMP.MANAGER_ID = MGR.EMP_ID);
 
 -- 오라클 구문
-
+SELECT EMP.EMP_NAME 사원명 , MGR.EMP_NAME 사수명
+FROM EMPLOYEE EMP, EMPLOYEE MGR
+WHERE EMP.MANAGER_ID = MGR.EMP_ID(+);
 
 
 ---------------------------------------------------------------------------------------------------------------
