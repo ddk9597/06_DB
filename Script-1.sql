@@ -587,6 +587,10 @@ WHERE 부서코드 = 'D6' ;
  --> 발생 이유 : 해석 순서가 FROM, WHERE, SELECT순으로 해석되기에
  -- 					WHERE 해석 시에는 SELECT의 내용 컴파일러(?)가 아직 모름
 
+
+------------------------------------------
+
+
 /* NULLS FIRST/LAST 옵션 적용하기 */
 -- 모든 사원의 이름, 전화번호 조회
 -- 오름차순 + NULLS FIRST(NULL인 경우 제일 위에)
@@ -603,6 +607,7 @@ ORDER BY PHONE /*NULLS LAST*/ ; -- NULLS LAST는 DEFAULT 값. 생략 가능
 SELECT EMP_NAME , PHONE 
 FROM EMPLOYEE
 ORDER BY PHONE DESC NULLS FIRST ;
+
 --> 정렬기준 -> NULL 위치 순서대로 해석
 
 /************** 정렬 중첩 ***************/

@@ -219,5 +219,63 @@ ESCAPE 안쓰면 구분 기준 _ 가 와일드카드로 인식됨
 WHERE EMAIL LIKE '___._%' ESCAPE'.';
 --> ESCAPE 문자는 아무거나 사용 가능. 지금은 .으로 사용
 
+---------------------------------------------------
+[ORDER BY 절]
+
+    {설명}
+    - SELECT문의 조회 결과(RESULT SET)를 정렬할 때 사용하는 구문 
+    - SELECT 구분에서 제일 마지막에 해석됨
+    - 작성법 및 해석 순서
+        3. SELECT 컬럼명 "별칭"
+        1. FROM 테이블명
+        2. WHERE 조건식
+        4. ORDER BY 
+    해석 순서에 따라 "별칭"은 ORDER BY 절에서 사용 가능, WHERE절에서 사용 불가능
+
+    {오름차순, 내림차순}
+    - 오름차순 : ASC(ASCENDING). 기본값
+    -> ORDER BY COLUMNAME ASC;
+
+    - 내림차순 : DESC(DESCENDING)
+    -> ORDER BY COLUMNAME DESC;
+
+    {SELECT절에 사용한 구문 ORDER BY 절에서 사용하기}
+    - 해석 순서에따라 후순위 해석절은 
+      선순위 해석절에서 사용한 구문 재사용 가능
+      -> WHERE절은 SELECT 절보다 선순위 해석, 
+         SELECT절에서 사용한 구문 재사용 불가능
+    - 1. 수식 사용 가능
+        - SELECT절에서 사용한 수식 대입 가능 
+        ->
+        SELECT EMP_NAME, SALARY * 12 연봉
+        FROM EMPLOYEE
+        ORDER BY SALARY * 12 DESC;
+    - 2. 별칭 사용 가능
+        SELECT EMP_NAME, SALARY * 12 연봉
+        FROM EMPLOYEE
+        ORDER BY 연봉 DESC;
+
+[NULLS FIRST/LAST]
+- 일반적으로 ORDER BY절과 함께 사용
+- NULL인 경우 제일 위에/마지막에 위치
+- NULLS LAST가 기본값 : NULL은 항상 마지막에 온다.
+    {NULLS FIRST}
+    - SELECT EMP_NAME , PHONE 
+      FROM EMPLOYEE
+      ORDER BY PHONE DESC NULLS FIRST
+
+[정렬 중첩]
+- 먼저 작성된 정렬 기준을 깨지 않고 다음 작성된 정렬 기준 적용
+- 정렬 기준이 여러개!!
+
+    EX) 부서별로 오름차순 정렬 후, 급여 내림차순으로 조회
+    -> 부서별로 오름차순 정렬
+    -> 오름차순으로 정렬 된 부서 내에서 급여를 비교하여 내림차순으로 조회
+    SELECT EMP_NAME, DEPT_CODE, SALARY
+    FROM EMPLOYEE
+    ORDER BY DEPT_CODE, SALARY DESC ;
+    -- ASC : 오름차순. 기본값이므로 생략 가능
 
 
+
+------ 단일행 함수와 그룹 함수 -----
