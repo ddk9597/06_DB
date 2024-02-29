@@ -574,24 +574,44 @@ WHERE HIRE_DATE = (
 	)
 ORDER BY HIRE_DATE;
 
+-- 사수가 있는 직원의 사번, 이름, 부서명, 사수사번 조회
 
+SELECT EMP_ID, EMP_NAME , DEPT_TITLE, MANAGER_ID 
+FROM EMPLOYEE MAIN
+LEFT JOIN DEPARTMENT ON ( DEPT_CODE = DEPT_ID)
+WHERE EXISTS (
+	SELECT EMP_ID
+	FROM EMPLOYEE SUB
+	WHERE SUB.EMP_ID = MAIN.MANAGER_ID );
+
+
+-- WHERE EXISTS(서브쿼리)
+	--> 서브쿼리 결과(RESULT SET)에 행이 존재한다면 TRUE, 
+	--	없으면 FALSE	
 
 ----------------------------------------------------------------------------------
 
--- 6. 스칼라 서브쿼리
+-- 6. 스칼라 서브쿼리 (SELECT 절에 작성하는 단일행 서브쿼리)
 --    SELECT절에 사용되는 서브쿼리 결과로 1행만 반환
 --    SQL에서 단일 값을 가르켜 '스칼라'라고 함
 
 -- 각 직원들이 속한 직급의 급여 평균 조회
-
-
+SELECT EMP_NAME, JOB_CODE, JOB_CODE||'의 평균 급여',
+		(SELECT FLOOR(AVG(SALARY))
+		 FROM EMPLOYEE SUB
+		 WHERE SUB.JOB_CODE = MAIN.JOB_CODE) "평균 급여"
+FROM EMPLOYEE MAIN ;
 
 -- 모든 사원의 사번, 이름, 관리자사번, 관리자명을 조회
 -- 단 관리자가 없는 경우 '없음'으로 표시
 -- (스칼라 + 상관 쿼리)
 
-
-
+SELECT EMP_ID , EMP_NAME , NVL(MANAGER_ID, '없음'),
+ NVL( (SELECT EMP_NAME 
+			 FROM EMPLOYEE SUB
+			 WHERE SUB.EMP_ID = MAIN.MANAGER_ID
+			 ), '없음')"관리자명"
+FROM EMPLOYEE MAIN; 
 
 
 -----------------------------------------------------------------------
@@ -600,16 +620,68 @@ ORDER BY HIRE_DATE;
 -- 7. 인라인 뷰(INLINE-VIEW)
 --    FROM 절에서 서브쿼리를 사용하는 경우로
 --    서브쿼리가 만든 결과의 집합(RESULT SET)을 테이블 대신에 사용한다.
+--	  --> 테이블을 입맛대로 조절 가능
+
+-- (VIEW : 조회만 가능한 가상 테이블)
 
 -- 인라인뷰를 활용한 TOP-N분석
 -- 전 직원 중 급여가 높은 상위 5명의
 -- 순위, 이름, 급여 조회
 
+-- 1) 전 직원 급여 내림차순으로 조회
+SELECT EMP_NAME, SALARY
+FROM EMPLOYEE e 
+ORDER BY SALARY DESC ;
 
+-- 2) ROWNUM : 행 번호를 나타내는 가상 컬럼
+	--> SELECT절 해석되는 당시의 행 번호를 기입한다!!!
 
+SELECT ROWNUM, EMP_NAME
+FROM EMPLOYEE 
+WHERE ROWNUM <= 5;
 
+-- 3) ROWNUM 이용하여 급여 상위 5명 조회하기
+SELECT ROWNUM, EMP_NAME, SALARY
+FROM EMPLOYEE e 
+ORDER BY SALARY DESC ;
+--> SELECT 절이 ORDER BY절 보다 먼저 해석되어
+--	ROWNUM 순서가 급여내림차순이 아닌 조회된 행 순서로 지정됨
+-- INLINE-VIEW를 이용해 문제 해결 가능함
+
+SELECT ROWNUM, EMP_NAME,SALARY 
+FROM ( 
+	/* 급여 내림차순으로 정렬 된 EMPLOYEE 테이블 조회 */
+	SELECT EMP_NAME, SALARY
+	FROM EMPLOYEE e 
+	ORDER BY SALARY DESC --> 조회 결과가 메인 쿼리의 테이블 역할을 한
+			)
+WHERE ROWNUM<= 5;
+
+-- * ROWNUM 사용 시 주의사항 *
+-- ROWNUM을 WHERE절에 사용할 때
+-- 항상 범위에 1부터 연속적인 범위가 포함되어야 한다
+-- 1부터 시작하고 연속될 것
+SELECT ROWNUM, EMP_NAME, SALARY 
+FROM  (SELECT EMP_NAME, SALARY
+	   FROM EMPLOYEE
+	   ORDER BY SALARY DESC)
+--WHERE ROWNUM = 1; -- 1행만 조회
+--WHERE ROWNUM = 2; -- 2행만 조회 --> 실패
+--WHERE ROWNUM BETWEEN 2 AND 10; --> 실패
+WHERE ROWNUM BETWEEN 1 AND 10; --> 1부터 포함해야된다!
 
 -- 급여 평균이 3위 안에 드는 부서의 부서코드와 부서명, 평균급여를 조회
+															/* INLINE-VIEW에 표시된 컬럼명 사용 */
+SELECT ROWNUM, DEPT_CODE, DEPT_TITLE, "평균 급여"
+FROM(
+	/* 인라인 뷰 */
+	SELECT DEPT_CODE, DEPT_TITLE, FLOOR(AVG(SALARY))"평균 급여"
+	FROM EMPLOYEE
+	LEFT JOIN DEPARTMENT ON (DEPT_CODE = DEPT_ID)
+	GROUP BY DEPT_CODE, DEPT_TITLE 
+	ORDER BY "평균 급여" DESC
+)
+WHERE ROWNUM <= 3;
 
 
 ------------------------------------------------------------------------
@@ -622,19 +694,91 @@ ORDER BY HIRE_DATE;
 -- 
 -- 전 직원의 급여 순위 
 -- 순위, 이름, 급여 조회
+-- 1~ 10위만 조회
+
+SELECT ROWNUM 급여순위, 이름, 급여 
+FROM (
+	SELECT EMP_NAME 이름, SALARY 급여
+	FROM EMPLOYEE
+	ORDER BY SALARY DESC)
+WHERE ROWNUM<= 10;
+
+-- WITH 사용 하기
+
+WITH TOP_SALARY -- 서브쿼리 이름 지정
+AS(	SELECT EMP_NAME 이름, SALARY 급여
+		FROM EMPLOYEE
+		ORDER BY SALARY DESC 
+	)
+
+SELECT ROWNUM 순위, 이름, 급여 
+FROM TOP_SALARY
+WHERE ROWNUM <= 10;
+-- 하나의 SQL 안에서만 사용 가능 
+--> (;기준으로 SQL 종료되면 다음 SQL에는 사용 불가)
+
 
 --------------------------------------------------------------------------
 
 
 -- 9. RANK() OVER / DENSE_RANK() OVER
 
+-- 급여를 많이 받는 순으로 조회
+
+SELECT EMP_NAME, SALARY 
+FROM EMPLOYEE e 
+ORDER BY SALARY DESC ;
+
 -- RANK() OVER : 동일한 순위 이후의 등수를 동일한 인원 수 만큼 건너뛰고 순위 계산
 --               EX) 공동 1위가 2명이면 다음 순위는 2위가 아니라 3위
-
+SELECT EMP_NAME, SALARY,
+	RANK() OVER(ORDER BY SALARY DESC) "급여 순위"
+FROM EMPLOYEE e ;
 
 
 -- DENSE_RANK() OVER : 동일한 순위 이후의 등수를 이후의 순위로 계산
 --                     EX) 공동 1위가 2명이어도 다음 순위는 2위
+
+SELECT EMP_NAME, SALARY,
+	DENSE_RANK() OVER(ORDER BY SALARY DESC) "급여 순위"
+FROM EMPLOYEE e ;
+
+
+
+/* -----------------------------------------------------------------------
+
+-- SELECT 관련 KEY POINT !! --
+
+/* 1. 테이블 구조 파악
+ * 
+ * 2. SELECT 해석 순서
+ *   + 별칭 사용이 가능한 부분
+ *    EX) ORDER BY 절에서는 SELECT절에서 해석된 별칭 사용 가능
+ * 	  EX) 인라인뷰에서 지정된 별칭을 메인쿼리에서도 똑같이 사용해야된다
+ * 		EX) 해석 순서에 따라. FROM 내의 INLINE-VIEW에 작성된 별칭은
+ * 				메인쿼리 내 어디서든 사용 가능함
+ * 
+ * 순서
+ * 5 	SELCET
+ * 1 	FROM + JOIN 테이블 선택
+ * 2 	WHERE 			 행 선택
+ * 3 	GROUP BY		 그룹화
+ * 4 	HAVING			 그룹 조건
+ * 6 	ORDER BY		 정렬 조건
+ * 
+ * 
+ * 3. 여러 테이블을 이용한 SELECT 진행 시
+ *    컬럼명이 겹치는 경우 이를 해결하는 방법
+ * 	
+ *    EX) 셀프 조인 -> 테이블별로 별칭 지정
+ *    EX) 상관 쿼리 -> 테이블별로 별칭 지정
+ *    EX) 다른 테이블이여도 컬럼명이 같을 때
+ * 				-> 테이블별로 별칭 지정
+ * 				-> 테이블명.컬럼명 형식으로 작성
+ * 
+ *  4. 조회하려는 데이터 (목적, 요구사항)을 확실하게 파악
+ * 		 --> 글을 잘 읽어라...
+ * */
 
 
 
