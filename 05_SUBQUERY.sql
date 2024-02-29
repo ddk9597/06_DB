@@ -498,7 +498,10 @@ WHERE ( JOB_CODE, SALARY)IN(
 	SELECT JOB_CODE, TRUNC(AVG(SALARY), -4)
 	FROM EMPLOYEE
 	GROUP BY JOB_CODE );
-                
+
+SELECT EMP_NAME, TRUNC((SALARY), 2)
+FROM EMPLOYEE e ;
+ 
                 
 
 -------------------------------------------------------------------------------
@@ -542,6 +545,34 @@ WHERE SALARY > (
 --    사번, 이름, 부서명(NULL이면 '소속없음'), 직급명, 입사일을 조회하고
 --    입사일이 빠른 순으로 조회하세요
 --    단, 퇴사한 직원은 제외하고 조회하세요
+
+-- 1) 입사일이 가장 빠른 사원의 입사일 찾기
+-- 특정 부서에서 입사일이 가장 빠른 사람 찾기
+SELECT MIN(HIRE_DATE) 
+FROM EMPLOYEE e 
+WHERE DEPT_CODE = 'D1';
+
+SELECT EMP_ID , EMP_NAME , DEPT_CODE , NVL(DEPT_TITLE, '소속 없음'),
+			 JOB_NAME, HIRE_DATE
+FROM EMPLOYEE MAIN
+LEFT JOIN DEPARTMENT ON(DEPT_CODE = DEPT_ID)
+JOIN JOB USING (JOB_CODE)
+WHERE HIRE_DATE = (
+	/* 메인 쿼리에서 전달 받은 행의 컬럼 값 중
+	 * DEPT_CODE 값을 이용해
+	 * 해당 부서에서 가장 빠른 입사일을 조회
+	 * */
+	SELECT MIN(HIRE_DATE)
+	FROM EMPLOYEE SUB
+	WHERE NVL(SUB.DEPT_CODE, '소속 없음') = NVL(MAIN.DEPT_CODE, '소속 없음')
+		--> NULL은 비교가 불가능하기 때문에
+		-- NVL을 이용해서 NULL이 아닌 비교 가능한 값으로 변경
+	AND ENT_YN != 'Y' 
+		--> 메인쿼리에 작성할 경우 결과값에서 ENT_YN 값이 Y인 사람 제외하기만 함.
+		--  그 사람 다음 순번으로 입사한 사람 포함시키지 않기때문에
+		--  서브쿼리에서 미리 적용시켜야 한다.
+	)
+ORDER BY HIRE_DATE;
 
 
 
