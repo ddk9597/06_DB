@@ -940,7 +940,7 @@ FROM DUAL;
 
 -------------------------------------------------------------------------
 
--- TO_DATE(문자열 | TNTWK[, 포맷])
+-- TO_DATE(문자열 | 숫자[, 포맷])
 -- 문자열 또는 숫자를 날짜 형식으로 변환
 
 SELECT TO_DATE('2024-03-04') 
@@ -1093,7 +1093,7 @@ SELECT EMP_ID, EMP_NAME , SALARY,
 CASE
 	WHEN SALARY >= 5000000 THEN '고급'
 	WHEN SALARY >= 3000000 THEN '중급'
-	ELSE 												'초급'
+	ELSE '초급'
 END 구분
 
 FROM EMPLOYEE 

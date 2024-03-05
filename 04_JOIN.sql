@@ -292,7 +292,7 @@ JOIN SAL_GRADE S ON (SALARY BETWEEN MIN_SAL AND MAX_SAL);
 
 -- 사원의 급여가
 -- SAL_LEVEL에 작성된 최소 ~ 최소 범위에
--- 급여가 포함될 때만 결고에 넣겠다는 JOIN
+-- 급여가 포함될 때만 결과에 넣겠다는 JOIN
 
 
 
