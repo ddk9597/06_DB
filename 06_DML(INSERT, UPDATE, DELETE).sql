@@ -277,3 +277,6 @@ SELECT * FROM EMPLOYEE3;
 ROLLBACK;
 -- 롤백 후 복구 확인 -> 복구 안됨을 확인!
 SELECT * FROM EMPLOYEE3;
+
+
+
