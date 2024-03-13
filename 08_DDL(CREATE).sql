@@ -235,7 +235,9 @@ CREATE TABLE USER_USED_UK(
     
     -- 테이블 레벨 --
     -- UNIQUE(USER_NAME) -- 테이블 레벨 제약조건 설정 (이름 X)
-   	CONSTRAINT USER_NAME_U UNIQUE(USER_NAME)
+   	CONSTRAINT USER_NAME_U UNIQUE(USER_NAME) 
+   	-- 테이블 레벨 제약조건 설정(이름 o)
+   	
 );
 
 
@@ -307,7 +309,7 @@ SELECT * FROM USER_USED_UK2;
 ----------------------------------------------------------------------------------------------------------------
 SELECT * FROM EMPLOYEE e ;
 
--- ***** 중요도1!!
+-- ***** 중요함1!!
 -- 3. PRIMARY KEY(기본키) 제약조건 
 
 -- 테이블에서 한 행의 정보를 찾기위해 사용할 컬럼을 의미함
