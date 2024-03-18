@@ -17,13 +17,18 @@ CREATE TABLE TB_PROPERTIES(
 DROP TABLE TB_PROPERTIES;
 
 
-=
+
 
 
 
 
 SELECT *
 FROM TB_PROPERTIES;
+
+SELECT DISTINCT  LOCATION_TITLE
+FROM TB_PROPERTIES 
+ORDER BY LOCATION_TITLE ASC ;
+
 
 
 INSERT INTO TB_PROPERTIES VALUES (1, '강일동', '675-1', '조이점핑', '상가', '임차인 010 6404 9613', '4', 20, 0, 2000, 105, 0, '고정주차1, 손님주차3시간 무료, 시설인수 안한다면 권리금 500');
@@ -424,3 +429,5 @@ INSERT INTO TB_PROPERTIES VALUES (396, '충정로1가', '58-3', '공실', '사�
 INSERT INTO TB_PROPERTIES VALUES (397, '충정로1가', '58-3', '공실', '사무실', '관리인 0502 0785 1011', '6층', 84, 0, 7000, 700, 385, '주차2(무료1, 유료12만) 엘베유');
 INSERT INTO TB_PROPERTIES VALUES (398, '충정로2가', '37-7', '공실', '상가 및 사무실', '사장 0502-1182-5589, 010.8700.7886.', '-1', 60, 0, 3000, 150, 15, '주차무 엘베무, 지1전체, 제한 없음');
 INSERT INTO TB_PROPERTIES VALUES (399, '충정로2가', '76', '공실', '사무실', '임대인(010 5233 6816)', '2', 9.25, 0, 1000, 105, 0, '월세에 부가세 포함, 화장실 내부, 보일러실, 벽걸이에어컨, 바닥난방. 주차1대제공');
+
+COMMIT;
